@@ -1,0 +1,89 @@
+珂珂喜欢吃香蕉。这里有 N 堆香蕉，第 i 堆中有 piles[i] 根香蕉。警卫已经离开了，将在 H 小时后回来。
+
+珂珂可以决定她吃香蕉的速度 K （单位：根/小时）。每个小时，她将会选择一堆香蕉，从中吃掉 K 根。如果这堆香蕉少于 K 根，她将吃掉这堆的所有香蕉，然后这一小时内不会再吃更多的香蕉。
+
+珂珂喜欢慢慢吃，但仍然想在警卫回来前吃掉所有的香蕉。
+
+返回她可以在 H 小时内吃掉所有香蕉的最小速度 K（K 为整数）。
+
+示例 1：
+输入: piles = [3,6,7,11], H = 8
+输出: 4
+
+示例 2：
+输入: piles = [30,11,23,4,20], H = 5
+输出: 30
+
+示例 3：
+输入: piles = [30,11,23,4,20], H = 6
+输出: 23
+
+提示：
+1 <= piles.length <= 10^4
+piles.length <= H <= 10^9
+1 <= piles[i] <= 10^9
+
+代码示意：
+一、暴力解法：珂珂一小时内吃香蕉最慢的速度是1 根 最快的速度是piles里最大值 
+/* 
+题解1（易于理解，但不是最优解）
+以[3,6,7,11] 堆为例，
+1.假设1小时吃1根，则总时间是 3/1 + 6/1 + 7/1 + 11/1 = 27 
+2.假设1小时吃2根，则总时间是 3/2 + 6/2 + 7/2 + 11/2 => 2（向上取整） + 3 + 4 + 6 = 15
+3.假设1小时吃3根，则总时间是 3/3 + 6/3 + 7/3 + 11/3 => 1 + 2 + 3 + 4 = 10
+4.假设1小时吃4根，则总时间是 3/4 + 6/4 + 7/4 + 11/4 => 1 + 2 + 2 + 3 = 8 （满足）
+...后面速度越快，时间越短
+*/
+var minEatingSpeed = function(piles, H) {
+    //审题：一个小时内不会再吃更多的香蕉 --》 每堆香蕉互不影响 吃完一堆香蕉的时间是向上取整的
+    let len = piles.length,max = Math.max(...piles);
+    if(len === H) return max;
+   
+    var calculateTime = function(piles,speed){
+        var time = 0;
+        time = piles.reduce((pre,cur)=>{
+            return pre + Math.ceil(cur/speed)
+        },0);
+        return time;
+    }
+     for(let i=1;i<=max;i++){
+        time = calculateTime(piles,i);
+        if(time<=H) return i;
+    }
+};
+二、二分查找：较为合理的选取速度来计算按照这个速度吃香蕉所需要耗费的时间从而调整速度直至满足条件
+/* 
+题解2（利用二分查找）
+二分需要注意的点：
+循环退出条件、mid 的取值，low 和 high 的更新
+low 设置为1根开始，high 设置为piles的最大值；
+mid = (low + high) / 2;
+循环推出条件：low >= high;
+利用enoughEat 方法，判断H（有效时间内）能否吃完；
+能吃完，则将mid 赋值给 high，否则low = mid + 1；
+*/
+var calculateTime = function(piles,speed){
+    var time = 0;
+    time = piles.reduce((pre,cur)=>{
+        return pre + Math.ceil(cur/speed)
+    },0);
+    return time
+}
+var minEatingSpeed = function(piles, H) {
+    //审题：一个小时内不会再吃更多的香蕉 --》 每堆香蕉互不影响 吃完一堆香蕉的时间是向上取整的
+    let len = piles.length,high = Math.max(...piles);
+    if(len === H) return high;
+    
+    let low = 1,mid,time;
+    while(low<high){ 
+        mid = (low+high)>>1;
+        time = calculateTime(piles,mid);
+        if(time<=H){
+            high = mid; //注意此处 试探是否可以进一步缩小速度
+        }else{
+            low = mid+1;
+        }
+    }
+    return low;
+};
+
